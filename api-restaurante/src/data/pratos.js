@@ -61,4 +61,4 @@ const pratos = [
     }
 ];
 
-module.exports = pratos;
+export default pratos;

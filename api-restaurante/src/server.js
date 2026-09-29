@@ -3,6 +3,7 @@ import express from "express";
 import { verificarDiaUtil } from "./middlewares/horario.js";
 import { registrarRequisicao } from "./middlewares/logger.js";
 import logsRoutes from "./routes/logs.routes.js";
+import pratosRoutes from "./routes/pratos.routes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(logsRoutes);
+app.use(pratosRoutes); 
 
 app.listen(3000, () => {
     console.log("Servidor rodando em http://localhost:3000");

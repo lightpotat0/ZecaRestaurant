@@ -1,17 +1,14 @@
-const express = require("express");
+import express from "express";
+import pratos from "../data/pratos.js"; 
+
 const router = express.Router();
 
-const pratos = require("../dados/pratos");
-
-// A - GET /pratos
 router.get("/pratos", (req, res) => {
     res.status(200).json(pratos);
 });
 
-// D - GET /pratos/:codigo
 router.get("/pratos/:codigo", (req, res) => {
     const codigo = Number(req.params.codigo);
-
     const prato = pratos.find(prato => prato.codigo === codigo);
 
     if (!prato) {
@@ -23,7 +20,6 @@ router.get("/pratos/:codigo", (req, res) => {
     res.status(200).json(prato);
 });
 
-// B - POST /pratos
 router.post("/pratos", (req, res) => {
     const { nome, categoria, preco } = req.body;
 
@@ -50,10 +46,8 @@ router.post("/pratos", (req, res) => {
     res.status(201).json(novoPrato);
 });
 
-// C - DELETE 
 router.delete("/pratos/:codigo", (req, res) => {
     const codigo = Number(req.params.codigo);
-
     const indice = pratos.findIndex(prato => prato.codigo === codigo);
 
     if (indice === -1) {
@@ -70,4 +64,4 @@ router.delete("/pratos/:codigo", (req, res) => {
     });
 });
 
-module.exports = router;
+export default router;
