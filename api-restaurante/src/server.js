@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
 
 app.use(logsRoutes);
 app.use(pratosRoutes);
+app.use(pratosRoutes); 
 
 app.listen(3000, () => {
     console.log("Servidor rodando em http://localhost:3000");

@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import PDFDocument from "pdfki t";
 import { fileURLToPath } from "node:url";
 
 const fonteRegular = fileURLToPath(new URL("../assets/Vera.ttf", import.meta.url));
@@ -36,4 +37,5 @@ export function gerarPdfCardapio(res, pratos) {
     }
 
     documento.end();
+}
 }
