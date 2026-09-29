@@ -1,10 +1,17 @@
 import express from "express";
 import pratos from "../data/pratos.js"; 
+import { gerarPdfCardapio } from "../services/pdf.js";
 
 const router = express.Router();
 
 router.get("/pratos", (req, res) => {
     res.status(200).json(pratos);
+});
+
+router.get("/pratos/pdf", (req, res) => {
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="cardapio.pdf"');
+    gerarPdfCardapio(res, pratos);
 });
 
 router.get("/pratos/:codigo", (req, res) => {

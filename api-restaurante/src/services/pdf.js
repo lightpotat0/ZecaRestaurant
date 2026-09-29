@@ -1,4 +1,4 @@
-import PDFDocument from "pdfki t";
+import PDFDocument from "pdfkit";
 import { fileURLToPath } from "node:url";
 
 const fonteRegular = fileURLToPath(new URL("../assets/Vera.ttf", import.meta.url));
