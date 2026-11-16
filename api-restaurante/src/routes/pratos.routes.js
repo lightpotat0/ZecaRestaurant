@@ -1,6 +1,8 @@
 import express from "express";
-import pratos from "../data/pratos.js"; 
+import pratos from "../data/pratos.js";
 import { gerarPdfCardapio } from "../services/pdf.js";
+import upload from "../middlewares/upload.js";
+import { uploadImagemCloudinary } from "../services/cloudinary.js";
 
 const router = express.Router();
 
@@ -12,6 +14,39 @@ router.get("/pratos/pdf", (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", 'inline; filename="cardapio.pdf"');
     gerarPdfCardapio(res, pratos);
+});
+
+// REQUISITO H: Exportar dados do banco em formato CSV
+router.get("/pratos/exportar", (req, res) => {
+    try {
+        const cabecalho = ["Codigo", "Nome", "Categoria", "Preco", "Imagem_URL"];
+
+        const linhas = pratos.map((prato) => {
+            const codigo = prato.codigo ?? prato._id ?? "";
+            const nome = `"${String(prato.nome || "").replace(/"/g, '""')}"`;
+            const categoria = `"${String(prato.categoria || "").replace(/"/g, '""')}"`;
+            const preco =
+                prato.preco !== undefined && prato.preco !== null
+                    ? Number(prato.preco).toFixed(2).replace(".", ",")
+                    : "0,00";
+            const imagemUrl = prato.imagemUrl || "";
+
+            return [codigo, nome, categoria, preco, imagemUrl].join(";");
+        });
+
+        // \uFEFF garante que acentos (ç, ã, é) abram corretamente no Excel
+        const csv = "\uFEFF" + [cabecalho.join(";"), ...linhas].join("\n");
+
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", 'attachment; filename="cardapio-zeca-restaurant.csv"');
+
+        return res.status(200).send(csv);
+    } catch (error) {
+        return res.status(500).json({
+            erro: "Erro ao exportar dados para CSV",
+            detalhes: error.message
+        });
+    }
 });
 
 router.get("/pratos/:codigo", (req, res) => {
@@ -27,30 +62,49 @@ router.get("/pratos/:codigo", (req, res) => {
     res.status(200).json(prato);
 });
 
-router.post("/pratos", (req, res) => {
-    const { nome, categoria, preco } = req.body;
+// REQUISITO B: Cadastrar prato com upload opcional de imagem para o Cloudinary
+router.post("/pratos", upload.single("imagem"), async (req, res) => {
+    try {
+        const { nome, categoria, preco } = req.body;
 
-    if (!nome || !categoria || preco === undefined) {
-        return res.status(400).json({
-            erro: "Preencha o nome, categoria e preco"
+        if (!nome || !categoria || preco === undefined || preco === "") {
+            return res.status(400).json({
+                erro: "Preencha o nome, categoria e preco"
+            });
+        }
+
+        let imagemUrl = "";
+        let imagemPublicId = "";
+
+        if (req.file) {
+            const resultadoNuvem = await uploadImagemCloudinary(req.file.buffer);
+            imagemUrl = resultadoNuvem.secure_url;
+            imagemPublicId = resultadoNuvem.public_id;
+        }
+
+        const novoCodigo =
+            pratos.length > 0
+                ? Math.max(...pratos.map(prato => prato.codigo)) + 1
+                : 1;
+
+        const novoPrato = {
+            codigo: novoCodigo,
+            nome,
+            categoria,
+            preco: Number(preco),
+            imagemUrl,
+            imagemPublicId
+        };
+
+        pratos.push(novoPrato);
+
+        return res.status(201).json(novoPrato);
+    } catch (error) {
+        return res.status(500).json({
+            erro: "Erro ao cadastrar prato",
+            detalhes: error.message
         });
     }
-
-    const novoCodigo =
-        pratos.length > 0
-            ? Math.max(...pratos.map(prato => prato.codigo)) + 1
-            : 1;
-
-    const novoPrato = {
-        codigo: novoCodigo,
-        nome,
-        categoria,
-        preco: Number(preco)
-    };
-
-    pratos.push(novoPrato);
-
-    res.status(201).json(novoPrato);
 });
 
 router.delete("/pratos/:codigo", (req, res) => {

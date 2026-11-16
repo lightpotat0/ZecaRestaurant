@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zeca Restaurante — Gestão de Cardápio</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --surface: #ffffff;
+      --surface-alt: #fbfaf7;
+      --border: #e2ddd4;
+      --border-strong: #cbc3b6;
+      --text: #1f1c18;
+      --text-muted: #6b6359;
+      --accent: #a63d1b;
+      --accent-hover: #893013;
+      --export: #23533a;
+      --export-hover: #193e2b;
+      --danger: #b42318;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 28px 20px 60px;
+    }
+
+    .container {
+      max-width: 1060px;
+      margin: 0 auto;
+    }
+
+    /* Cabeçalho */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .brand h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .brand p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #btn-exportar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--export);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    #btn-exportar:hover {
+      background-color: var(--export-hover);
+    }
+
+    #btn-exportar:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    /* Barra de feedback (substitui alert) */
+    .status-bar {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
+    }
+
+    .status-bar.sucesso {
+      display: block;
+      background-color: #ecfdf3;
+      border-color: #abefc6;
+      color: #065f46;
+    }
+
+    .status-bar.erro {
+      display: block;
+      background-color: #fef3f2;
+      border-color: #fecdca;
+      color: #912018;
+    }
+
+    .status-bar a {
+      color: inherit;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    /* Grid principal */
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 1px 2px rgba(31, 28, 24, 0.04);
+    }
+
+    .card-header {
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .badge-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    /* Formulário */
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field select {
+      width: 100%;
+      padding: 9px 11px;
+      font-size: 0.92rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent);
+    }
+
+    /* Área de upload de foto */
+    .upload-box {
+      border: 1px dashed var(--border-strong);
+      background: var(--surface-alt);
+      border-radius: 6px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+      position: relative;
+    }
+
+    .upload-box:hover {
+      border-color: var(--accent);
+      background: #f9f6f1;
+    }
+
+    .upload-box input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .upload-hint strong {
+      color: var(--accent);
+    }
+
+    .preview-area {
+      display: none;
+      margin-top: 10px;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    .preview-area.ativo {
+      display: flex;
+    }
+
+    .preview-area img {
+      width: 52px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .preview-info {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .preview-info span {
+      display: block;
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-remover-foto {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: 6px;
+      background-color: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 11px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    /* Tabela do cardápio */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .prato-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .prato-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .prato-placeholder {
+      width: 46px;
+      height: 46px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .prato-nome {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .prato-cod {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .tag-cat {
+      display: inline-block;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .preco {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .btn-del {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 9px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-del:hover {
+      border-color: #fecdca;
+      background: #fef3f2;
+      color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>Zeca Restaurante</h1>
+        <p>Cadastro de cardápio, fotos em nuvem e exportação de dados</p>
+      </div>
+
+      <div class="header-actions">
+        <!-- REQUISITO H: Botão chamado 'Exportar' -->
+        <button id="btn-exportar" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exportar
+        </button>
+      </div>
+    </header>
+
+    <div id="status-bar" class="status-bar" role="status"></div>
+
+    <main class="layout">
+      <!-- Coluna Esquerda: Formulário -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Novo item no cardápio</h2>
+        </div>
+
+        <form id="form-prato" enctype="multipart/form-data">
+          <div class="field">
+            <label for="nome">Nome do prato</label>
+            <input type="text" id="nome" name="nome" placeholder="Ex: Baião de Dois Completo" required />
+          </div>
+
+          <div class="field">
+            <label for="categoria">Categoria</label>
+            <input type="text" id="categoria" name="categoria" list="sugestoes-categorias" placeholder="Ex: Prato Principal" required />
+            <datalist id="sugestoes-categorias">
+              <option value="Entrada">
+              <option value="Prato Principal">
+              <option value="Acompanhamento">
+              <option value="Sobremesa">
+              <option value="Bebida">
+            </datalist>
+          </div>
+
+          <div class="field">
+            <label for="preco">Preço (R$)</label>
+            <input type="number" id="preco" name="preco" step="0.01" min="0" placeholder="32.90" required />
+          </div>
+
+          <div class="field">
+            <label>Foto do prato (opcional)</label>
+            <div class="upload-box">
+              <input type="file" id="input-imagem" name="imagem" accept="image/png, image/jpeg, image/webp" />
+              <div class="upload-hint">
+                <strong>Clique para escolher</strong> uma foto<br />
+                JPG, PNG ou WEBP até 5MB
+              </div>
+            </div>
+
+            <div id="preview-area" class="preview-area">
+              <img id="preview-img" src="" alt="Prévia do prato" />
+              <div class="preview-info">
+                <span id="preview-nome">arquivo.jpg</span>
+                Pronta para envio ao Cloudinary
+              </div>
+              <button type="button" id="btn-limpar-foto" class="btn-remover-foto">Remover</button>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-salvar" class="btn-submit">Salvar no cardápio</button>
+        </form>
+      </section>
+
+      <!-- Coluna Direita: Lista de Pratos -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Itens salvos</h2>
+          <span id="contador-pratos" class="badge-count">0 itens</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Prato</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th style="width: 70px;"></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-pratos">
+              <tr>
+                <td colspan="4" class="empty-state">Carregando cardápio...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const statusBar = document.getElementById('status-bar');
+    const formPrato = document.getElementById('form-prato');
+    const btnSalvar = document.getElementById('btn-salvar');
+    const btnExportar = document.getElementById('btn-exportar');
+    const inputImagem = document.getElementById('input-imagem');
+    const previewArea = document.getElementById('preview-area');
+    const previewImg = document.getElementById('preview-img');
+    const previewNome = document.getElementById('preview-nome');
+    const btnLimparFoto = document.getElementById('btn-limpar-foto');
+    const tabelaPratos = document.getElementById('tabela-pratos');
+    const contadorPratos = document.getElementById('contador-pratos');
+
+    function getHeadersAuth() {
+      const token = localStorage.getItem('token');
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    function mostrarAviso(htmlMensagem, tipo = 'sucesso') {
+      statusBar.innerHTML = htmlMensagem;
+      statusBar.className = `status-bar ${tipo}`;
+    }
+
+    function escaparHTML(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto ?? '';
+      return div.innerHTML;
+    }
+
+    function formatarMoeda(valor) {
+      return Number(valor || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    }
+
+    // Pré-visualização da imagem escolhida antes de enviar
+    inputImagem.addEventListener('change', () => {
+      const arquivo = inputImagem.files[0];
+      if (!arquivo) {
+        previewArea.classList.remove('ativo');
+        return;
+      }
+
+      previewNome.textContent = arquivo.name;
+      previewImg.src = URL.createObjectURL(arquivo);
+      previewArea.classList.add('ativo');
+    });
+
+    btnLimparFoto.addEventListener('click', () => {
+      inputImagem.value = '';
+      previewArea.classList.remove('ativo');
+      previewImg.src = '';
+    });
+
+    // Carregar pratos cadastrados na tabela
+    async function carregarCardapio() {
+      try {
+        const res = await fetch('/pratos', { headers: getHeadersAuth() });
+        if (!res.ok) throw new Error('Não foi possível carregar o cardápio.');
+
+        const lista = await res.json();
+        contadorPratos.textContent = `${lista.length} ${lista.length === 1 ? 'item' : 'itens'}`;
+
+        if (lista.length === 0) {
+          tabelaPratos.innerHTML = `
+            <tr>
+              <td colspan="4" class="empty-state">Nenhum prato cadastrado ainda.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        tabelaPratos.innerHTML = lista.map((prato) => {
+          const thumbHtml = prato.imagemUrl
+            ? `<img class="prato-thumb" src="${escaparHTML(prato.imagemUrl)}" alt="${escaparHTML(prato.nome)}" />`
+            : `<div class="prato-placeholder">Sem<br>foto</div>`;
+
+          return `
+            <tr>
+              <td>
+                <div class="prato-cell">
+                  ${thumbHtml}
+                  <div>
+                    <div class="prato-nome">${escaparHTML(prato.nome)}</div>
+                    <div class="prato-cod">Cód. #${escaparHTML(String(prato.codigo ?? '-'))}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="tag-cat">${escaparHTML(prato.categoria)}</span></td>
+              <td class="preco">${formatarMoeda(prato.preco)}</td>
+              <td style="text-align: right;">
+                <button type="button" class="btn-del" onclick="removerPrato(${Number(prato.codigo)})">Excluir</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tabelaPratos.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">${escaparHTML(err.message)}</td>
+          </tr>
+        `;
+      }
+    }
+
+    // Salvar prato + upload Cloudinary
+    formPrato.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(formPrato);
+
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = inputImagem.files.length > 0 ? 'Enviando foto e salvando...' : 'Salvando...';
+
+      try {
+        const res = await fetch('/pratos', {
+          method: 'POST',
+          headers: getHeadersAuth(),
+          body: formData
+        });
+
+        const dados = await res.json();
+        if (!res.ok) throw new Error(dados.erro || 'Erro ao salvar prato.');
+
+        if (dados.imagemUrl) {
+          mostrarAviso(
+            `Prato <strong>${escaparHTML(dados.nome)}</strong> salvo com foto na nuvem. <a href="${escaparHTML(dados.imagemUrl)}" target="_blank" rel="noopener">Abrir imagem no Cloudinary</a>`,
+            'sucesso'
+          );
+        } else {
+          mostrarAviso(`Prato <strong>${escaparHTML(dados.nome)}</strong> salvo no cardápio.`, 'sucesso');
+        }
+
+        formPrato.reset();
+        previewArea.classList.remove('ativo');
+        await carregarCardapio();
+      } catch (err) {
+        mostrarAviso(escaparHTML(err.message), 'erro');
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = 'Salvar no cardápio';
+      }
+    });
+
+    // Excluir prato
+    window.removerPrato = async (codigo) => {
+      try {
+        const res = await fetch(`/pratos/${codigo}`, {
+          method: 'DELETE',
+          headers: getHeadersAuth()
+        });
+
+        if (!res.ok) {
+          const erro = await res.json();
+          throw new Error(erro.erro || 'Erro ao excluir prato.');
+        }
+
+        mostrarAviso(`Prato #${codigo} removido do cardápio.`, 'sucesso');
+        await carregarCardapio();
+      } catch (err) {
+        mostrarAviso(escaparHTML(err.message), 'erro');
+      }
+    };
+
+    // Botão Exportar CSV (Requisito H)
+    btnExportar.addEventListener('click', async () => {
+      btnExportar.disabled = true;
+
+      try {
+        const res = await fetch('/pratos/exportar', {
+          method: 'GET',
+          headers: getHeadersAuth()
+        });
+
+        if (!res.ok) throw new Error('Falha ao gerar arquivo CSV.');
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cardapio-zeca-restaurant.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        mostrarAviso('Arquivo <strong>cardapio-zeca-restaurant.csv</strong> baixado com sucesso.', 'sucesso');
+      } catch (err) {
+        mostrarAviso(escaparHTML(err.message), 'erro');
+      } finally {
+        btnExportar.disabled = false;
+      }
+    });
+
+    carregarCardapio();
+  </script>
+</body>
+</html>
