@@ -1,15 +1,25 @@
 {
-  "name": "api-restaurante",
+  "name": "api-pratos",
   "version": "1.0.0",
-  "description": "API do restaurante",
+  "description": "API de cardápio com dados mockados",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
-  "type": "module",
+  "engines": { "node": ">=18" },
   "dependencies": {
     "express": "^4.19.2",
     "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": ["src/**/*.js"]
   }
 }
