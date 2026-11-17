@@ -1,17 +1,10 @@
-export function verificarDiaUtil(req, res, next) {
-    const hoje = new Date();
+const { diaDaSemana } = require("../utils/data");
 
-    const diaDaSemana = hoje.getDay();
+function verificarDiaUtil(req, res, next) {
+    const dia = diaDaSemana();
 
-    // 0 = Domingo
-    // 1 = Segunda
-    // 2 = Terça
-    // 3 = Quarta
-    // 4 = Quinta
-    // 5 = Sexta
-    // 6 = Sábado
-
-    if (diaDaSemana === 0 || diaDaSemana === 6) {
+    // 0 = Domingo, 6 = Sábado
+    if (dia === 0 || dia === 6) {
         return res.status(403).json({
             erro: "A API não está disponível aos finais de semana."
         });
@@ -19,3 +12,5 @@ export function verificarDiaUtil(req, res, next) {
 
     next();
 }
+
+module.exports = { verificarDiaUtil };

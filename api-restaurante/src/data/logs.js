@@ -1,1 +1,2 @@
-export const logs = [];
+const logs = [];
+module.exports = { logs };

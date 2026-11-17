@@ -1,6 +1,6 @@
-import express from "express";
-import { logs } from "../data/logs.js";
-import { normalizarData } from "../utils/data.js";
+const express = require("express");
+const { logs } = require("../data/logs");
+const { normalizarData } = require("../utils/data");
 
 const router = express.Router();
 
@@ -34,4 +34,4 @@ router.get("/logs", (req, res) => {
     });
 });
 
-export default router;
+module.exports = router;

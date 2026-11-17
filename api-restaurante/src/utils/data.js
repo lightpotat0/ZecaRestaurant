@@ -1,4 +1,4 @@
-export function normalizarData(data) {
+function normalizarData(data) {
     // DD/MM/AAAA
     if (data.includes("/")) {
         const partes = data.split("/");
@@ -19,3 +19,19 @@ export function normalizarData(data) {
 
     return null;
 }
+
+function diaDaSemana() {
+    return new Date().getDay();
+}
+
+function agoraFormatado() {
+    const agora = new Date();
+
+    return {
+        data: agora.toLocaleDateString("pt-BR"),
+        dataISO: agora.toISOString().split("T")[0],
+        horario: agora.toLocaleTimeString("pt-BR")
+    };
+}
+
+module.exports = { normalizarData, diaDaSemana, agoraFormatado };

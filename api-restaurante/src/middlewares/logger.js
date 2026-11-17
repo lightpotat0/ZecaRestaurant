@@ -1,6 +1,6 @@
-import { logs } from "../data/logs.js";
+const { logs } = require("../data/logs");
 
-export function registrarRequisicao(req, res, next) {
+function registrarRequisicao(req, res, next) {
     const agora = new Date();
 
     const data = agora.toLocaleDateString("pt-BR");
@@ -17,3 +17,5 @@ export function registrarRequisicao(req, res, next) {
 
     next();
 }
+
+module.exports = { registrarRequisicao };
