@@ -5,6 +5,7 @@ import { verificarDiaUtil } from "./middlewares/horario.js";
 import { registrarRequisicao } from "./middlewares/logger.js";
 import logsRoutes from "./routes/logs.routes.js";
 import pratosRoutes from "./routes/pratos.routes.js";
+import usuariosRoutes from "./routes/usuarios.routes.js";
 import { conectarBanco, fecharBanco } from "./database.js";
 
 const app = express();
@@ -21,7 +22,8 @@ app.get("/", (req, res) => {
 });
 
 app.use(logsRoutes);
-app.use(pratosRoutes); 
+app.use(pratosRoutes);
+app.use(usuariosRoutes);
 
 const PORT = process.env.PORT || 3000;
 

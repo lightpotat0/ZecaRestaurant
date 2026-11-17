@@ -51,8 +51,10 @@ O `.env` está ignorado pelo Git. A primeira inicialização cria índices e ins
 | POST | /pratos | Cadastra um prato |
 | GET | /pratos/:codigo | Busca prato por código |
 | DELETE | /pratos/:codigo | Remove um prato |
+| POST | /usuarios | Cadastra usuário com senha armazenada via bcrypt |
+| POST | /usuarios/login | Confere e-mail e senha com bcrypt |
 | GET | /pratos/pdf | Gera o cardápio em PDF |
-| GET | /logs/:data | Lista requisições de uma data (AAAA-MM-DD) |
+| GET | /logs?data=AAAA-MM-DD | Lista requisições de uma data |
 
 ## Regras
 - A API só funciona de **segunda a sexta**. Sábado e domingo retornam bloqueio.
@@ -91,6 +93,30 @@ curl https://SEU-APP.onrender.com/logs/2026-09-25
 ```bash
 curl -o cardapio.pdf https://SEU-APP.onrender.com/pratos/pdf
 ```
+
+**Cadastrar usuário**
+```bash
+curl -X POST http://localhost:3000/usuarios \
+  -H "Content-Type: application/json" \
+  -d '{"email":"pessoa@exemplo.com","senha":"uma-senha-forte"}'
+```
+
+As senhas são armazenadas como hash bcrypt (12 salt rounds); a API não retorna o hash. O e-mail é único.
+
+**Login**
+```bash
+curl -X POST http://localhost:3000/usuarios/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"pessoa@exemplo.com","senha":"uma-senha-forte"}'
+```
+
+O login compara a senha informada com o hash bcrypt armazenado e retorna os dados básicos do usuário. Ele não cria sessão; as rotas da API permanecem públicas.
+
+**Executar testes automatizados**
+```bash
+npm test
+```
+Os testes cobrem hash bcrypt no cadastro, login válido, rejeição de senha inválida e e-mail duplicado sem gravar dados no Atlas.
 
 ## Fluxo de trabalho (Git)
 Cada integrante trabalha em uma branch `feature/*` e abre um Pull Request para `main`.

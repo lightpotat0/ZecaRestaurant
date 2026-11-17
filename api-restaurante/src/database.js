@@ -18,6 +18,7 @@ export async function conectarBanco() {
 
     await database.collection("pratos").createIndex({ codigo: 1 }, { unique: true });
     await database.collection("logs").createIndex({ dataISO: 1 });
+    await database.collection("usuarios").createIndex({ email: 1 }, { unique: true });
 
     const pratos = database.collection("pratos");
     if (await pratos.countDocuments() === 0) {
