@@ -1,19 +1,22 @@
-import { logs } from "../data/logs.js";
+import { colecao } from "../database.js";
 
-export function registrarRequisicao(req, res, next) {
+export async function registrarRequisicao(req, res, next) {
     const agora = new Date();
 
     const data = agora.toLocaleDateString("pt-BR");
     const dataISO = agora.toISOString().split("T")[0];
     const horario = agora.toLocaleTimeString("pt-BR");
 
-    logs.push({
+    try {
+        await colecao("logs").insertOne({
         data,
         dataISO,
         horario,
         rota: req.originalUrl,
         metodo: req.method
-    });
-
-    next();
+        });
+        next();
+    } catch (erro) {
+        next(erro);
+    }
 }

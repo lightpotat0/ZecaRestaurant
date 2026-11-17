@@ -1,12 +1,12 @@
 import express from "express";
-import { logs } from "../data/logs.js";
+import { colecao } from "../database.js";
 import { normalizarData } from "../utils/data.js";
 
 const router = express.Router();
 
 // G - GET /logs?data=28/09/2026
 // Também aceita 2026-09-28
-router.get("/logs", (req, res) => {
+router.get("/logs", async (req, res, next) => {
     const { data } = req.query;
 
     if (!data) {
@@ -23,15 +23,10 @@ router.get("/logs", (req, res) => {
         });
     }
 
-    const registros = logs
-        .filter(log => log.dataISO === dataISO)
-        .map(({ dataISO, ...resto }) => resto);
-
-    res.status(200).json({
-        data,
-        total: registros.length,
-        registros
-    });
+    try {
+        const registros = await colecao("logs").find({ dataISO }, { projection: { _id: 0, dataISO: 0 } }).toArray();
+        res.status(200).json({ data, total: registros.length, registros });
+    } catch (erro) { next(erro); }
 });
 
 export default router;

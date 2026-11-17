@@ -13,7 +13,7 @@ API REST para gerenciar o cardápio de um restaurante, desenvolvida para a disci
 | Seu Nome | GitHub, deploy e documentação |
 
 ## Tecnologias
-Node.js · Express · PDFKit
+Node.js · Express · MongoDB Atlas · PDFKit
 
 ## Como instalar
 ```bash
@@ -28,6 +28,16 @@ npm start
 npm run dev      
 ```
 Servidor em `http://localhost:3000`.
+
+## Configurar o MongoDB Atlas
+1. Crie um cluster gratuito no [MongoDB Atlas](https://www.mongodb.com/atlas/database) e um usuário de banco em **Database Access**.
+2. Em **Network Access**, permita o endereço IP da máquina que executará a API (evite liberar `0.0.0.0/0` para uso permanente).
+3. No cluster, selecione **Connect → Drivers → Node.js** e copie a URI `mongodb+srv://...`.
+4. Na pasta `api-restaurante`, copie `.env.example` para `.env` e preencha `MONGODB_URI` com a URI copiada. Substitua usuário e senha pelos dados do usuário de banco; codifique caracteres especiais da senha para URL.
+5. Opcionalmente, defina `MONGODB_DB` (padrão: `restaurante`) e `PORT` (padrão: `3000`).
+6. Execute `npm install` e `npm run dev`.
+
+O `.env` está ignorado pelo Git. A primeira inicialização cria índices e insere os dez pratos iniciais se a coleção `pratos` estiver vazia. Os pratos e logs passam a ser persistidos no Atlas. No Render, cadastre `MONGODB_URI` e `MONGODB_DB` em **Environment**; o serviço recebe a porta por `PORT`.
 
 ## Modelo de dados
 ```json
