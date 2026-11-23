@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zeca Restaurant · Painel</title>
+<style>
+  :root { --tinta:#14302c; --papel:#f1f4f0; --mostarda:#e8b02f; --linha:#c5d0c8; --erro:#a3281f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --tinta:#e6efe9; --papel:#10201d; --linha:#2f4943; --erro:#ff8a7a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
+         background:var(--papel); color:var(--tinta); font:16px/1.5 system-ui, sans-serif; }
+  main { width:min(420px,100%); }
+  h1 { font:700 2rem/1.1 Georgia, serif; margin:0 0 6px; }
+  p.sub { margin:0 0 28px; opacity:.75; }
+  form, #painel { display:grid; gap:12px; }
+  label { display:grid; gap:4px; font-weight:600; font-size:.9rem; }
+  input { padding:11px 12px; font:inherit; color:inherit; background:transparent;
+          border:1.5px solid var(--linha); border-radius:6px; }
+  input:focus-visible, button:focus-visible { outline:3px solid var(--mostarda); outline-offset:2px; }
+  button { padding:12px 16px; font:inherit; font-weight:700; cursor:pointer; border-radius:6px;
+           border:1.5px solid var(--tinta); background:transparent; color:var(--tinta); }
+  button.principal { background:var(--mostarda); border-color:var(--mostarda); color:#14302c;
+                     font-size:1.15rem; padding:16px; }
+  button:disabled { opacity:.5; cursor:wait; }
+  #msg { min-height:1.5em; margin-top:14px; font-size:.95rem; }
+  #msg.erro { color:var(--erro); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Zeca Restaurant</h1>
+  <p class="sub">Entre para exportar o cardápio em CSV.</p>
+
+  <form id="f-login">
+    <label>E-mail <input type="email" id="email" autocomplete="username" required></label>
+    <label>Senha <input type="password" id="senha" autocomplete="current-password" required></label>
+    <button type="submit">Enviar código por e-mail</button>
+  </form>
+
+  <form id="f-codigo" hidden>
+    <label>Código de 6 dígitos <input id="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required></label>
+    <button type="submit">Confirmar código</button>
+  </form>
+
+  <div id="painel" hidden>
+    <button class="principal" id="exportar">Exportar</button>
+  </div>
+
+  <p id="msg" role="status"></p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let token = null;
+
+function aviso(texto, erro = false) {
+  $("msg").textContent = texto;
+  $("msg").className = erro ? "erro" : "";
+}
+
+async function post(url, corpo) {
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
+  const dados = await r.json();
+  if (!r.ok) throw new Error(dados.erro || "Algo deu errado.");
+  return dados;
+}
+
+$("f-login").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    await post("/auth/login", { email: $("email").value, senha: $("senha").value });
+    $("f-login").hidden = true;
+    $("f-codigo").hidden = false;
+    $("codigo").focus();
+    aviso("Enviamos um código para o seu e-mail. Ele vale por 5 minutos.");
+  } catch (err) { aviso(err.message, true); }
+});
+
+$("f-codigo").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    ({ token } = await post("/auth/verificar", { email: $("email").value, codigo: $("codigo").value }));
+    $("f-codigo").hidden = true;
+    $("painel").hidden = false;
+    aviso("Tudo certo. Você já pode exportar.");
+  } catch (err) { aviso(err.message, true); }
+});
+
+$("exportar").addEventListener("click", async () => {
+  const botao = $("exportar");
+  botao.disabled = true;
+  try {
+    const r = await fetch("/exportar/pratos", { headers: { Authorization: "Bearer " + token } });
+    if (!r.ok) throw new Error((await r.json()).erro || "Não foi possível exportar.");
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(await r.blob());
+    link.download = "pratos.csv";
+    link.click();
+    URL.revokeObjectURL(link.href);
+    aviso("pratos.csv baixado.");
+  } catch (err) { aviso(err.message, true); }
+  botao.disabled = false;
+});
+</script>
+</body>
+</html>
